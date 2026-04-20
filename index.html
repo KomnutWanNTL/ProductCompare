@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProductCompare | เปรียบเทียบราคาสินค้าหน้าร้าน</title>
+    <meta name="description"
+        content="เว็บเปรียบเทียบราคาสินค้าระหว่างร้าน คำนวณราคาต่อหน่วย หาอันที่คุ้มที่สุดได้ทันที" />
+    <meta name="theme-color" content="#FFDCDC" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#2f2521" media="(prefers-color-scheme: dark)" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="bg-shape bg-shape-1" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape-2" aria-hidden="true"></div>
+
+    <main class="app-shell">
+        <header class="hero">
+            <p class="eyebrow">Shopping Helper</p>
+            <h1>เปรียบเทียบราคาสินค้าได้ทันทีตอนเดินซื้อของ</h1>
+            <p class="hero-subtitle">
+                กรอกข้อมูลสินค้า ระบบจะคำนวณราคาต่อหน่วยให้อัตโนมัติและไฮไลต์ตัวเลือกที่คุ้มที่สุดในรอบนี้
+            </p>
+        </header>
+
+        <section class="card form-card" aria-labelledby="entry-title">
+            <div class="card-header">
+                <h2 id="entry-title">เพิ่มรายการเปรียบเทียบ</h2>
+                <button id="sampleBtn" class="btn btn-ghost" type="button">ใส่ข้อมูลตัวอย่าง</button>
+            </div>
+
+            <form id="compareForm" class="form-grid">
+                <label>
+                    ชื่อสินค้า
+                    <input id="product" name="product" type="text" placeholder="เช่น น้ำดื่ม" required />
+                </label>
+
+                <label>
+                    ราคา (บาท)
+                    <input id="price" name="price" type="number" min="0.01" step="0.01" placeholder="45" required />
+                </label>
+
+                <label>
+                    ปริมาณ
+                    <input id="amount" name="amount" type="number" min="0.01" step="0.01"
+                        placeholder="เช่น 1500 หรือ 1.5" required />
+                </label>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">เพิ่มรายการ</button>
+                    <button id="clearBtn" type="button" class="btn btn-danger">ล้างทั้งหมด</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card results-card" aria-labelledby="result-title">
+            <div class="results-topbar">
+                <h2 id="result-title">ผลการเปรียบเทียบ</h2>
+                <input id="searchInput" type="search" placeholder="ค้นหาชื่อสินค้า" aria-label="ค้นหารายการ" />
+            </div>
+
+            <div id="summary" class="summary"></div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>สินค้า</th>
+                            <th>ราคา</th>
+                            <th>ปริมาณ</th>
+                            <th>ราคาต่อหน่วย</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <template id="emptyTemplate">
+        <tr>
+            <td colspan="6" class="empty-state">
+                ยังไม่มีรายการเปรียบเทียบ เพิ่มอย่างน้อย 2 รายการเพื่อดูว่าราคาไหนคุ้มกว่า
+            </td>
+        </tr>
+    </template>
+
+    <script src="app.js" defer></script>
+</body>
+
+</html>
