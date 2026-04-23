@@ -5,10 +5,10 @@ const rowsContainer = document.getElementById("rowsContainer");
 const resultsContainer = document.getElementById("resultsContainer");
 const errorMessage = document.getElementById("errorMessage");
 const addRowBtn = document.getElementById("addRowBtn");
-const removeRowBtn = document.getElementById("removeRowBtn");
 const clearScreenBtn = document.getElementById("clearScreenBtn");
 
 let rows = loadRows();
+let lastBestRowId = null;
 
 renderAll();
 
@@ -23,17 +23,9 @@ addRowBtn.addEventListener("click", () => {
     }
 });
 
-removeRowBtn.addEventListener("click", () => {
-    if (rows.length <= MIN_ROWS) {
-        return;
-    }
-
-    rows = rows.slice(0, -1);
-    renderAll();
-});
-
 clearScreenBtn.addEventListener("click", () => {
     rows = [createRow(), createRow()];
+    lastBestRowId = null;
     renderAll();
 
     const input = document.querySelector('[data-field="name"]');
@@ -70,6 +62,30 @@ rowsContainer.addEventListener("input", (event) => {
     renderErrorHint();
 });
 
+rowsContainer.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+        return;
+    }
+
+    const deleteBtn = target.closest("button[data-delete-id]");
+    if (!(deleteBtn instanceof HTMLButtonElement)) {
+        return;
+    }
+
+    if (rows.length <= MIN_ROWS) {
+        return;
+    }
+
+    const rowId = String(deleteBtn.dataset.deleteId || "");
+    if (!rowId) {
+        return;
+    }
+
+    rows = rows.filter((row) => row.id !== rowId);
+    renderAll();
+});
+
 function createRow() {
     return {
         id: crypto.randomUUID(),
@@ -97,6 +113,8 @@ function renderRows() {
 
     const body = rows
         .map((row) => {
+            const disableDelete = rows.length <= MIN_ROWS;
+
             return `
                 <article class="item-row">
                     <div class="row-fields">
@@ -143,14 +161,24 @@ function renderRows() {
                             />
                         </div>
                     </div>
+                    <button
+                        class="row-delete-btn"
+                        type="button"
+                        aria-label="ลบรายการนี้"
+                        title="ลบรายการนี้"
+                        data-delete-id="${row.id}"
+                        ${disableDelete ? "disabled" : ""}
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path fill-rule="evenodd" d="M9 3a1 1 0 0 0-.894.553L7.382 5H4a1 1 0 1 0 0 2h.293l.88 12.332A2 2 0 0 0 7.168 21h9.664a2 2 0 0 0 1.995-1.668L19.707 7H20a1 1 0 1 0 0-2h-3.382l-.724-1.447A1 1 0 0 0 15 3H9zm2 6a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0V9zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0V9z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                 </article>
             `;
         })
         .join("");
 
     rowsContainer.innerHTML = `${header}${body}`;
-
-    removeRowBtn.disabled = rows.length <= MIN_ROWS;
 }
 
 function getValidRows() {
@@ -180,41 +208,37 @@ function renderResults() {
     const validRows = getValidRows();
 
     if (!validRows.length) {
+        lastBestRowId = null;
         resultsContainer.innerHTML = '<p class="result-empty">กรอกข้อมูลอย่างน้อย 1 รายการเพื่อเริ่มคำนวณ</p>';
         return;
     }
 
-    const first = validRows[0];
-    const second = validRows[1] || null;
+    const cheapest = validRows[0];
+    const shouldAnimateBest = Boolean(lastBestRowId && cheapest.id !== lastBestRowId);
 
-    const firstCard = `
-        <article class="result-card rank-1">
-            <span class="result-badge">อันดับ 1 ถูกที่สุด</span>
-            <h3 class="result-name">${escapeHtml(first.name)}</h3>
-            <p class="result-meta">ราคา ${formatCurrency(first.price)} | ปริมาณ ${formatNumber(first.amount)}</p>
-            <p class="result-unit">${formatCurrency(first.unitPrice)} / หน่วย</p>
-        </article>
-    `;
+    resultsContainer.innerHTML = validRows
+        .map((item, index) => {
+            const rank = index + 1;
+            const isBest = rank === 1;
+            const diffPerPack = Math.max(0, (item.unitPrice - cheapest.unitPrice) * item.amount);
+            const diffPercent = cheapest.unitPrice > 0 ? ((item.unitPrice - cheapest.unitPrice) / cheapest.unitPrice) * 100 : 0;
 
-    if (!second) {
-        resultsContainer.innerHTML = `${firstCard}<p class="result-empty">ต้องมีอย่างน้อย 2 รายการเพื่อเปรียบเทียบ</p>`;
-        return;
-    }
+            return `
+                <article class="result-card ${isBest ? "rank-1" : "rank-2"} ${isBest && shouldAnimateBest ? "best-flash" : ""}">
+                    <span class="result-badge">${isBest ? "อันดับ 1 ถูกที่สุด" : `อันดับ ${rank}`}</span>
+                    <h3 class="result-name">${escapeHtml(item.name)}</h3>
+                    <p class="result-meta">ราคา ${formatCurrency(item.price)} | ปริมาณ ${formatNumber(item.amount)}</p>
+                    <p class="result-unit">${formatCurrency(item.unitPrice)} / หน่วย</p>
+                    ${isBest
+                        ? ""
+                        : `<p class="result-diff">แพงกว่า ${formatCurrency(diffPerPack)} ต่อแพ็ก (${formatNumber(diffPercent)}%)</p>`
+                    }
+                </article>
+            `;
+        })
+        .join("");
 
-    const diffPerPack = Math.max(0, (second.unitPrice - first.unitPrice) * second.amount);
-    const diffPercent = first.unitPrice > 0 ? ((second.unitPrice - first.unitPrice) / first.unitPrice) * 100 : 0;
-
-    const secondCard = `
-        <article class="result-card rank-2">
-            <span class="result-badge">อันดับ 2</span>
-            <h3 class="result-name">${escapeHtml(second.name)}</h3>
-            <p class="result-meta">ราคา ${formatCurrency(second.price)} | ปริมาณ ${formatNumber(second.amount)}</p>
-            <p class="result-unit">${formatCurrency(second.unitPrice)} / หน่วย</p>
-            <p class="result-diff">แพงกว่า ${formatCurrency(diffPerPack)} ต่อแพ็ก (${formatNumber(diffPercent)}%)</p>
-        </article>
-    `;
-
-    resultsContainer.innerHTML = `${firstCard}${secondCard}`;
+    lastBestRowId = cheapest.id;
 }
 
 function renderErrorHint() {

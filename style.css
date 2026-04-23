@@ -122,13 +122,42 @@ body {
     background: var(--surface-alt);
     padding: 6px;
     display: grid;
+    grid-template-columns: 1fr auto;
     gap: 6px;
+    align-items: center;
 }
 
 .row-fields {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 6px;
+}
+
+.row-delete-btn {
+    min-width: 44px;
+    min-height: 40px;
+    border-radius: 9px;
+    border: 1px solid #f3c7c3;
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.row-delete-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    display: block;
+}
+
+.row-delete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .field {
@@ -155,7 +184,7 @@ body {
 
 .action-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 6px;
     margin-bottom: 6px;
 }
@@ -213,11 +242,52 @@ body {
     border-radius: 9px;
     background: #fff;
     padding: 8px;
+    position: relative;
+    overflow: visible;
 }
 
 .result-card.rank-1 {
     background: var(--success-bg);
     border-color: #f0d4a8;
+}
+
+.result-card.best-flash {
+    animation: bestFlashPop 560ms ease-out;
+}
+
+.result-card.best-flash::before,
+.result-card.best-flash::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.result-card.best-flash::before {
+    background:
+        radial-gradient(circle, #ffb347 0 22%, transparent 24%),
+        radial-gradient(circle, #ff6f61 0 22%, transparent 24%),
+        radial-gradient(circle, #ffd166 0 22%, transparent 24%),
+        radial-gradient(circle, #7bc8a4 0 22%, transparent 24%);
+    background-size: 14px 14px;
+    background-position: -32px -6px, 28px -12px, -10px 34px, 30px 24px;
+    background-repeat: no-repeat;
+    animation: fireworkBurst 720ms ease-out;
+}
+
+.result-card.best-flash::after {
+    box-shadow:
+        -22px -18px 0 1px #ff9f1c,
+        18px -24px 0 1px #ff6b6b,
+        30px 8px 0 1px #ffd166,
+        -28px 14px 0 1px #84dcc6,
+        10px 30px 0 1px #ff9aa2,
+        -6px -30px 0 1px #f6bd60;
+    animation: fireworkSpark 720ms ease-out;
 }
 
 .result-badge {
@@ -259,9 +329,83 @@ body {
     color: #a94b1d;
 }
 
+@keyframes bestFlashPop {
+    0% {
+        transform: scale(0.985);
+        box-shadow: 0 0 0 0 rgba(216, 101, 45, 0.42);
+        filter: brightness(1);
+    }
+
+    35% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 8px rgba(216, 101, 45, 0.12);
+        filter: brightness(1.04);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(216, 101, 45, 0);
+        filter: brightness(1);
+    }
+}
+
+@keyframes fireworkBurst {
+    0% {
+        transform: translate(-50%, -50%) scale(0.35);
+        opacity: 0;
+    }
+
+    30% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.95;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.35);
+        opacity: 0;
+    }
+}
+
+@keyframes fireworkSpark {
+    0% {
+        transform: translate(-50%, -50%) scale(0.25) rotate(0deg);
+        opacity: 0;
+    }
+
+    35% {
+        transform: translate(-50%, -50%) scale(1) rotate(20deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.55) rotate(40deg);
+        opacity: 0;
+    }
+}
+
 @media (max-width: 380px) {
+    .item-row {
+        grid-template-columns: 1fr;
+    }
+
     .row-fields {
         grid-template-columns: 1fr;
+    }
+
+    .row-delete-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .result-card.best-flash {
+        animation: none;
+    }
+
+    .result-card.best-flash::before,
+    .result-card.best-flash::after {
+        animation: none;
+        opacity: 0;
     }
 }
 
